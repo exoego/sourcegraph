@@ -53,12 +53,12 @@ func TestSearchResults(t *testing.T) {
 
 	t.Run("repo: only", func(t *testing.T) {
 		var calledReposList bool
-		db.Mocks.Repos.List = func(_ context.Context, op db.ReposListOptions) ([]*types.Repo, error) {
+		db.Mocks.Repos.MinimalList = func(_ context.Context, op db.ReposListOptions) ([]*db.MinimalRepo, error) {
 			calledReposList = true
 			if want := (db.ReposListOptions{Enabled: true, IncludePatterns: []string{"r", "p"}, LimitOffset: limitOffset}); !reflect.DeepEqual(op, want) {
 				t.Fatalf("got %+v, want %+v", op, want)
 			}
-			return []*types.Repo{{Name: "repo"}}, nil
+			return []*db.MinimalRepo{{Name: "repo"}}, nil
 		}
 		db.Mocks.Repos.MockGetByName(t, "repo", 1)
 
@@ -75,12 +75,12 @@ func TestSearchResults(t *testing.T) {
 
 	t.Run("multiple terms", func(t *testing.T) {
 		var calledReposList bool
-		db.Mocks.Repos.List = func(_ context.Context, op db.ReposListOptions) ([]*types.Repo, error) {
+		db.Mocks.Repos.MinimalList = func(_ context.Context, op db.ReposListOptions) ([]*db.MinimalRepo, error) {
 			calledReposList = true
 			if want := (db.ReposListOptions{Enabled: true, LimitOffset: limitOffset}); !reflect.DeepEqual(op, want) {
 				t.Fatalf("got %+v, want %+v", op, want)
 			}
-			return []*types.Repo{{Name: "repo"}}, nil
+			return []*db.MinimalRepo{{Name: "repo"}}, nil
 		}
 		defer func() { db.Mocks = db.MockStores{} }()
 		db.Mocks.Repos.MockGetByName(t, "repo", 1)
@@ -329,7 +329,7 @@ func TestSearchResolver_getPatternInfo(t *testing.T) {
 }
 
 func TestSearchResolver_DynamicFilters(t *testing.T) {
-	repo := &types.Repo{
+	repo := &db.MinimalRepo{
 		Name: "testRepo",
 	}
 
@@ -555,12 +555,12 @@ func TestCompareSearchResults(t *testing.T) {
 	tests := []testCase{{
 		// Different repo matches
 		a: &repositoryResolver{
-			repo: &types.Repo{
+			repo: &db.MinimalRepo{
 				Name: api.RepoName("a"),
 			},
 		},
 		b: &repositoryResolver{
-			repo: &types.Repo{
+			repo: &db.MinimalRepo{
 				Name: api.RepoName("b"),
 			},
 		},
@@ -568,13 +568,13 @@ func TestCompareSearchResults(t *testing.T) {
 	}, {
 		// Repo match vs file match in same repo
 		a: &fileMatchResolver{
-			repo: &types.Repo{
+			repo: &db.MinimalRepo{
 				Name: api.RepoName("a"),
 			},
 			JPath: "a",
 		},
 		b: &repositoryResolver{
-			repo: &types.Repo{
+			repo: &db.MinimalRepo{
 				Name: api.RepoName("a"),
 			},
 		},
@@ -582,13 +582,13 @@ func TestCompareSearchResults(t *testing.T) {
 	}, {
 		// Same repo, different files
 		a: &fileMatchResolver{
-			repo: &types.Repo{
+			repo: &db.MinimalRepo{
 				Name: api.RepoName("a"),
 			},
 			JPath: "a",
 		},
 		b: &fileMatchResolver{
-			repo: &types.Repo{
+			repo: &db.MinimalRepo{
 				Name: api.RepoName("a"),
 			},
 			JPath: "b",
@@ -597,13 +597,13 @@ func TestCompareSearchResults(t *testing.T) {
 	}, {
 		// different repo, same file name
 		a: &fileMatchResolver{
-			repo: &types.Repo{
+			repo: &db.MinimalRepo{
 				Name: api.RepoName("a"),
 			},
 			JPath: "a",
 		},
 		b: &fileMatchResolver{
-			repo: &types.Repo{
+			repo: &db.MinimalRepo{
 				Name: api.RepoName("b"),
 			},
 			JPath: "a",
