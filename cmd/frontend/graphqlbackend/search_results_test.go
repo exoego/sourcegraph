@@ -12,7 +12,6 @@ import (
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/db"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/pkg/search"
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/internal/pkg/search/query"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/types"
 	"github.com/sourcegraph/sourcegraph/pkg/api"
 	searchbackend "github.com/sourcegraph/sourcegraph/pkg/search/backend"
 )
@@ -133,24 +132,21 @@ func TestSearchResults(t *testing.T) {
 
 func BenchmarkSearchResults(b *testing.B) {
 	// Repositories in the database
-	var repos []*types.Repo
+	var repos []*db.MinimalRepo
 	// Repositories indexed by Zoekt
 	var zoektRepos []*zoekt.RepoListEntry
 
 	for i := 1; i <= 5000; i++ {
 		name := fmt.Sprintf("repo-%d", i)
 
-		repos = append(repos, &types.Repo{
-			ID: api.RepoID(i),
-			ExternalRepo: &api.ExternalRepoSpec{
+		repos = append(repos, &db.MinimalRepo{
+			ID:   api.RepoID(i),
+			Name: api.RepoName(name),
+			ExternalRepo: api.ExternalRepoSpec{
 				ID:          name,
 				ServiceType: "github",
 				ServiceID:   "https://github.com",
 			},
-			Name:        api.RepoName(name),
-			URI:         fmt.Sprintf("https://github.com/foobar/%s", name),
-			Description: "this repositoriy contains a side project that I haven't maintained in 2 years",
-			Language:    "v-language",
 		})
 
 		zoektRepos = append(zoektRepos, &zoekt.RepoListEntry{
@@ -189,7 +185,7 @@ func BenchmarkSearchResults(b *testing.B) {
 		DisableCache: true,
 	}
 
-	db.Mocks.Repos.List = func(_ context.Context, op db.ReposListOptions) ([]*types.Repo, error) {
+	db.Mocks.Repos.MinimalList = func(_ context.Context, op db.ReposListOptions) ([]*db.MinimalRepo, error) {
 		return repos, nil
 	}
 	defer func() { db.Mocks = db.MockStores{} }()
