@@ -749,7 +749,7 @@ func TestSearchResultsHydration(t *testing.T) {
 		},
 	}
 
-	zoektFileMatches := []zoekt.FileMatch{zoekt.FileMatch{
+	zoektFileMatches := []zoekt.FileMatch{{
 		Score:      5.0,
 		FileName:   fileName,
 		Repository: string(minimalRepo.Name), // Important: this needs to match a name in `repos`
